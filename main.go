@@ -24,6 +24,7 @@ func main() {
 		ip                 = app.StringOpt("ip", "localhost", "IP address where clair-scanner is running on")
 		logFile            = app.StringOpt("l log", "", "Log to a file")
 		reportAll          = app.BoolOpt("all reportAll", true, "Display all vulnerabilities, even if they are approved")
+		reportJson         = app.BoolOpt("j", false, "Report stdout as JSON")
 		reportFile         = app.StringOpt("r report", "", "Report output file, as JSON")
 		imageName          = app.StringArg("IMAGE", "", "Name of the Docker image to scan")
 	)
@@ -51,6 +52,7 @@ func main() {
 			*reportFile,
 			*whitelistThreshold,
 			*reportAll,
+			*reportJson,
 		})
 		if len(result) > 0 {
 			os.Exit(1)

@@ -76,7 +76,26 @@ func filterApproved(vulnerabilities []vulnerabilityInfo, unapproved []string, re
 	return vulns
 }
 
-func reportToConsole(imageName string, vulnerabilities []vulnerabilityInfo, unapproved []string, reportAll bool) {
+func generateReportJson(imageName string, vulnerabilities []vulnerabilityInfo, unapproved []string) []byte {
+	report := &vulnerabilityReport{
+		Image:           imageName,
+		Vulnerabilities: vulnerabilities,
+		Unapproved:      unapproved,
+	}
+	reportJSON, err := json.MarshalIndent(report, "", "    ")
+	if err != nil {
+		logger.Fatalf("Could not create a report: report is not proper JSON %v", err)
+	}
+	return reportJSON
+}
+
+func reportToConsole(imageName string, vulnerabilities []vulnerabilityInfo, unapproved []string, reportAll bool, reportJson bool) {
+	if reportJson {
+		report := generateReportJson(imageName, vulnerabilities, unapproved)
+		os.Stdout.Write(report)
+		return
+	}
+
 	if len(vulnerabilities) > 0 {
 		logger.Warnf("Image [%s] contains %d total vulnerabilities", imageName, len(vulnerabilities))
 
@@ -102,16 +121,8 @@ func reportToFile(imageName string, vulnerabilities []vulnerabilityInfo, unappro
 	if file == "" {
 		return
 	}
-	report := &vulnerabilityReport{
-		Image:           imageName,
-		Vulnerabilities: vulnerabilities,
-		Unapproved:      unapproved,
-	}
-	reportJSON, err := json.MarshalIndent(report, "", "    ")
-	if err != nil {
-		logger.Fatalf("Could not create a report: report is not proper JSON %v", err)
-	}
-	if err = ioutil.WriteFile(file, reportJSON, 0644); err != nil {
+	report := generateReportJson(imageName, vulnerabilities, unapproved)
+	if err := ioutil.WriteFile(file, report, 0644); err != nil {
 		logger.Fatalf("Could not create a report: could not write to file %v", err)
 	}
 }
